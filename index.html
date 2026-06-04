@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agua para cultivo de maíz</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background: #252424;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .card {
+      background: #3a3838;
+      border: 1px solid #e0ddd5;
+      border-radius: 14px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .header i {
+      font-size: 40px;
+      color: #185FA5;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 500;
+      margin: 0.5rem 0 0.25rem;
+      color: #1a1a1a;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .range-bar {
+      background: #f4f4f0;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .range-bar span { font-size: 12px; color: #888; }
+    .range-bar strong { font-size: 13px; color: #1a1a1a; }
+
+    label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.25rem;
+    }
+
+    input[type="number"] {
+      flex: 1;
+      font-size: 18px;
+      text-align: center;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: #378ADD;
+      box-shadow: 0 0 0 3px rgba(55,138,221,0.15);
+    }
+
+    button {
+      padding: 0 1.25rem;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button:hover { background: #f4f4f0; }
+    button:active { transform: scale(0.98); }
+
+    .error-msg {
+      font-size: 13px;
+      color: #c0392b;
+      text-align: center;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    .result-box {
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .result-box.show { display: block; }
+
+    .result-label { font-size: 13px; margin-bottom: 4px; }
+    .result-value { font-size: 36px; font-weight: 500; margin: 0; }
+    .result-unit { font-size: 14px; margin-top: 2px; }
+    .result-status { font-size: 13px; margin-top: 8px; font-weight: 500; }
+
+    .ok { background: #EAF3DE; }
+    .ok .result-label,
+    .ok .result-unit,
+    .ok .result-status { color: #3B6D11; }
+    .ok .result-value { color: #27500A; }
+
+    .low { background: #FAEEDA; }
+    .low .result-label,
+    .low .result-unit,
+    .low .result-status { color: #854F0B; }
+    .low .result-value { color: #633806; }
+
+    .high { background: #E6F1FB; }
+    .high .result-label,
+    .high .result-unit,
+    .high .result-status { color: #185FA5; }
+    .high .result-value { color: #0C447C; }
+
+    .formula-note {
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+      margin-top: 1rem;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <i class="ti ti-plant-2"></i>
+    <h1>Agua para cultivo de maíz</h1>
+    <p>Calcula los mm de agua necesarios según el año</p>
+  </div>
+
+  <div class="range-bar">
+    <span>Rango óptimo:</span>
+    <strong>500 – 800 mm</strong>
+  </div>
+
+  <label for="yearInput">Ingresa el año</label>
+  <div class="input-row">
+    <input type="number" id="yearInput" placeholder="ej. 2024" min="1900" max="2100" />
+    <button onclick="calcular()">
+      <i class="ti ti-calculator"></i> Calcular
+    </button>
+  </div>
+
+  <div class="error-msg" id="errorMsg">Por favor ingresa un año válido.</div>
+
+  <div class="result-box" id="resultBox">
+    <p class="result-label">Requerimiento de agua para <span id="yearOut"></span></p>
+    <p class="result-value"><span id="mmOut">--</span></p>
+    <p class="result-unit">milímetros de agua</p>
+    <p class="result-status" id="statusMsg"></p>
+  </div>
+
+  <p class="formula-note">y = -33.023x + 67510</p>
+</div>
+
+<script>
+  document.getElementById('yearInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') calcular();
+  });
+
+  function calcular() {
+    const input = document.getElementById('yearInput');
+    const year = parseFloat(input.value);
+    const errorMsg = document.getElementById('errorMsg');
+    const resultBox = document.getElementById('resultBox');
+
+    if (!input.value || isNaN(year) || year < 1 || !Number.isInteger(year)) {
+      errorMsg.classList.add('show');
+      resultBox.classList.remove('show');
+      return;
+    }
+
+    errorMsg.classList.remove('show');
+
+    const mm = -33.023 * year + 67510;
+    const mmRounded = Math.round(mm);
+
+    document.getElementById('yearOut').textContent = year;
+    document.getElementById('mmOut').textContent = mmRounded.toLocaleString('es-MX');
+
+    resultBox.className = 'result-box show';
+    const statusEl = document.getElementById('statusMsg');
+
+    if (mmRounded < 500) {
+      resultBox.classList.add('low');
+      statusEl.innerHTML = '<i class="ti ti-alert-triangle"></i> Por debajo del mínimo recomendado (500 mm)';
+    } else if (mmRounded > 800) {
+      resultBox.classList.add('high');
+      statusEl.innerHTML = '<i class="ti ti-droplet"></i> Por encima del máximo recomendado (800 mm)';
+    } else {
+      resultBox.classList.add('ok');
+      statusEl.innerHTML = '<i class="ti ti-circle-check"></i> Dentro del rango óptimo (500 – 800 mm)';
+    }
+  }
+</script>
+
+</body>
+</html>
